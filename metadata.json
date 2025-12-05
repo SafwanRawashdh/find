@@ -1,0 +1,5 @@
+{
+  "name": "FIND - Fast Integrated Network of Deals",
+  "description": "A product search aggregator for Amazon and eBay with advanced filtering for authenticated users.",
+  "requestFramePermissions": []
+}
