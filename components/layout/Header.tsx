@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 // Icons as inline SVGs for simplicity
 const SearchIcon = () => (
@@ -102,11 +103,10 @@ const NavLink: React.FC<NavLinkProps> = ({
 }) => (
   <Link
     href={href}
-    className={`relative flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-      isActive
-        ? "bg-accent-purple/20 text-accent-purple"
-        : "text-gray-400 hover:text-white hover:bg-dark-600"
-    }`}
+    className={`relative flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${isActive
+      ? "bg-accent-purple/20 text-accent-purple"
+      : "text-gray-400 hover:text-white hover:bg-dark-600"
+      }`}
   >
     {icon}
     <span className="hidden sm:inline">{label}</span>
@@ -124,12 +124,12 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  // Mock data - would come from context/state in real app
+  const { user, isAuthenticated, logout } = useAuth();
+
+  // Mock counts for demo
   const cartCount = 3;
-  const favoritesCount = 5;
+  const favoritesCount = user?.favorites?.length || 0;
   const alertsCount = 2;
-  const isLoggedIn = true;
-  const user = { displayName: "John", email: "john@example.com" };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,33 +197,37 @@ export default function Header() {
 
           {/* Navigation */}
           <nav className="flex items-center gap-1">
-            <NavLink
-              href="/favorites"
-              icon={<HeartIcon filled={pathname === "/favorites"} />}
-              label="Favorites"
-              badge={favoritesCount}
-              isActive={pathname === "/favorites"}
-            />
-            <NavLink
-              href="/cart"
-              icon={<CartIcon />}
-              label="Cart"
-              badge={cartCount}
-              isActive={pathname === "/cart"}
-            />
-            <NavLink
-              href="/alerts"
-              icon={<BellIcon />}
-              label="Alerts"
-              badge={alertsCount}
-              isActive={pathname === "/alerts"}
-            />
+            {isAuthenticated && (
+              <>
+                <NavLink
+                  href="/favorites"
+                  icon={<HeartIcon filled={pathname === "/favorites"} />}
+                  label="Favorites"
+                  badge={favoritesCount}
+                  isActive={pathname === "/favorites"}
+                />
+                <NavLink
+                  href="/cart"
+                  icon={<CartIcon />}
+                  label="Cart"
+                  badge={cartCount}
+                  isActive={pathname === "/cart"}
+                />
+                <NavLink
+                  href="/alerts"
+                  icon={<BellIcon />}
+                  label="Alerts"
+                  badge={alertsCount}
+                  isActive={pathname === "/alerts"}
+                />
 
-            {/* Divider */}
-            <div className="h-6 w-px bg-dark-500 mx-2 hidden sm:block" />
+                {/* Divider */}
+                <div className="h-6 w-px bg-dark-500 mx-2 hidden sm:block" />
+              </>
+            )}
 
             {/* User Menu */}
-            {isLoggedIn ? (
+            {isAuthenticated && user ? (
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -231,7 +235,7 @@ export default function Header() {
                 >
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full opacity-0 group-hover:opacity-50 blur transition-opacity" />
                   <div className="relative h-10 w-10 bg-gradient-to-br from-accent-purple to-accent-pink rounded-full flex items-center justify-center font-bold text-white text-sm border-2 border-dark-900">
-                    {user.displayName.charAt(0).toUpperCase()}
+                    {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
                   </div>
                 </button>
 
@@ -269,6 +273,7 @@ export default function Header() {
                         <button
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-dark-600 transition-colors"
                           onClick={() => {
+                            logout();
                             setIsUserMenuOpen(false);
                           }}
                         >

@@ -1,174 +1,89 @@
-<div align="center">
+# FIND – Fast Integrated Network of Deals
 
-# 🔍 FIND - Fast Integrated Network of Deals
+FIND is a modern **price comparison and deals aggregator** application. It allows users to search for products across multiple marketplaces (e.g., Amazon, eBay) to find the best offers.
 
-**A unified product search platform for comparing prices across Amazon and eBay**
+> **Note:** This is a frontend-focused application. It aggregates data but does **not** handle payments or checkout natively. Transactions are completed on the respective marketplace websites.
 
-[![React](https://img.shields.io/badge/React-19.2-blue?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.2-purple?logo=vite)](https://vitejs.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-Database-green?logo=supabase)](https://supabase.com/)
+## 🚀 Technology Stack
 
-</div>
+- **Framework:** [Next.js 14+](https://nextjs.org/) (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Authentication:** Frontend-only Auth Context (Mock implementation tailored for demo)
+- **Forms:** React Hook Form + Zod
+- **Icons:** Lucide React
 
-## ✨ Features
+## 📂 Project Structure
 
-- 🛒 **Multi-Marketplace Search** - Search products across Amazon and eBay simultaneously
-- 📊 **Price History Tracking** - View 7-day price trends for any product
-- ❤️ **Favorites** - Save products to your favorites list
-- 🛍️ **Shopping Cart** - Add products to cart for easy checkout
-- 🔔 **Price Alerts** - Set alerts for price drops
-- 🎨 **Modern UI** - Clean, responsive design with filters and sorting
-- 🔐 **User Authentication** - Secure login via Supabase Auth
+```
+├── app/                  # Next.js App Router
+│   ├── (public)/         # Public routes (Home, Search)
+│   ├── (auth)/           # Authentication pages (Login, Register)
+│   ├── (protected)/      # Protected routes (Favorites, Alerts)
+│   ├── layout.tsx        # Root layout with AuthProvider
+│   └── globals.css       # Global styles & Tailwind
+├── components/           # Reusable UI components
+│   ├── layout/           # Header, Footer, Shell
+│   ├── products/         # ProductCard, ProductGrid
+│   ├── search/           # SearchBar
+│   ├── modals/           # AuthRequiredModal
+│   └── ui/               # Base UI elements (Button, Card)
+├── context/              # React Context (AuthContext)
+├── lib/                  # Utilities and Mock Data
+└── types/                # TypeScript definitions
+```
 
-## 🚀 Quick Start
+## ✨ Key Features
 
-### Prerequisites
+- **Search First Experience:** Clean home page focused on product discovery.
+- **Guest Access:**
+  - Search and browse products freely.
+  - Restricted actions (Favorites, Price Alerts) prompt for login.
+- **Authentication:**
+  - Login / Register flows.
+  - **Protected Routes:** `/favorites`, `/alerts`, and `/comparison` are only accessible to authenticated users.
+- **Responsive Design:** Fully responsive UI built with Tailwind CSS.
 
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- npm or yarn
+## 🛠️ Getting Started
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SafwanRawashdh/FIND.git
-   cd find
-   ```
-
-2. **Install dependencies**
+1. **Install Dependencies**
    ```bash
    npm install
+   # or
+   pnpm install
+   # or
+   yarn install
    ```
 
-3. **Run the development server**
+2. **Run Development Server**
    ```bash
    npm run dev
+   # or
+   pnpm dev
    ```
 
-4. **Open in browser**
-   ```
-   http://localhost:3000
-   ```
+3. **Open Application**
+   Visit [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal).
 
-## 🗄️ Database Setup (Supabase)
+## 🔐 Authentication & Guest Behavior
 
-The app uses Supabase as its backend. To set up the database:
+The application differentiates between **Guests** and **Authenticated Users**:
 
-1. Go to [Supabase](https://supabase.com/) and create a project
-2. Open the **SQL Editor** in your Supabase dashboard
-3. Run the complete database setup script located at:
-   ```
-   supabase/COMPLETE_DATABASE_SETUP.sql
-   ```
+| Feature | Guest | Authenticated User |
+| :--- | :---: | :---: |
+| **Search Products** | ✅ | ✅ |
+| **View Details** | ✅ | ✅ |
+| **Add to Favorites** | ❌ (Prompts Login) | ✅ |
+| **Set Price Alerts** | ❌ (Prompts Login) | ✅ |
+| **Product Comparison** | ❌ (Prompts Login) | ✅ |
 
-This will create:
-- **products** - 36 sample products from Amazon & eBay
-- **users** - User profiles linked to Supabase Auth
-- **favorites** - User's saved products
-- **price_history** - 7-day price tracking for each product
+*Current Auth implementation uses a mock `AuthContext` with local storage persistence for demonstration purposes.*
 
-### Configure Supabase Credentials
+## 📝 Notes
 
-Update `lib/supabase.ts` with your project credentials:
-
-```typescript
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-```
-
-## 📁 Project Structure
-
-```
-find/
-├── src/                  # New modular architecture
-│   ├── components/
-│   │   ├── common/       # Reusable UI components (Button, Card, Modal, etc.)
-│   │   └── layout/       # Layout components (Header, NotificationBar)
-│   ├── features/
-│   │   ├── search/       # Search feature (HeroSection)
-│   │   ├── products/     # Product feature components
-│   │   ├── favorites/    # Favorites feature
-│   │   ├── cart/         # Cart feature
-│   │   └── profile/      # Profile feature
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Supabase client, database types
-│   ├── providers/        # Context providers (Auth, Cart, Favorites)
-│   ├── services/         # API services (products, auth, favorites, priceHistory)
-│   ├── types/            # TypeScript type definitions
-│   ├── utils/            # Utility functions
-│   ├── App.tsx           # Main app component
-│   └── main.tsx          # Entry point
-├── components/           # Legacy components (being migrated)
-├── context/              # Legacy contexts (being migrated)
-├── pages/                # Page components
-├── services/             # Legacy services
-├── supabase/
-│   └── migrations/       # Database schema & seed data
-├── App.tsx               # Main application component
-├── types.ts              # TypeScript type definitions
-└── index.tsx             # Application entry point
-```
-
-## 🏗️ Architecture
-
-The project follows a **feature-based architecture** with:
-
-- **Clean separation of concerns** - UI, business logic, and data access are separate
-- **Reusable components** - Common UI components in `src/components/common/`
-- **Custom hooks** - Encapsulated state logic (`useProducts`, `useFavorites`, etc.)
-- **Service layer** - Clean API abstraction over Supabase
-- **Type safety** - Comprehensive TypeScript types
-
-## 🛠️ Tech Stack
-
-| Category | Technology |
-|----------|------------|
-| Frontend | React 19.2, TypeScript 5.8 |
-| Build Tool | Vite 6.2 |
-| Database | Supabase (PostgreSQL) |
-| Styling | Tailwind CSS (CDN) |
-| State Management | React Context + Custom Hooks |
-
-## 📦 Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-
-## 🔒 Environment Variables
-
-Create a `.env.local` file in the root directory:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-## 📊 Sample Data
-
-The app includes 36 sample products across 5 categories:
-
-| Category | Products |
-|----------|----------|
-| Electronics | 17 |
-| Computers | 8 |
-| Toys | 5 |
-| Books | 4 |
-| Home | 4 |
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
+- **Backend:** This repo focuses on the Frontend. Backend services (e.g., Supabase) are integrated via service layers but currently use mock data/implementations for the demo experience.
+- **Environment:** If integrating real Supabase Auth, refer to `SUPABASE_SETUP.md` and configure `.env.local`.
 
 ---
 
-<div align="center">
-Made with ❤️ by Safwan Rawashdeh
-</div>
+*Built with Next.js and Tailwind CSS.*

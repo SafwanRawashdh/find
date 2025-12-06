@@ -1,8 +1,8 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/alerts/page": "app/alerts/page.js",
   "/cart/page": "app/cart/page.js",
-  "/favorites/page": "app/favorites/page.js",
-  "/account/page": "app/account/page.js"
+  "/(auth)/auth/register/page": "app/(auth)/auth/register/page.js",
+  "/(auth)/auth/after-register/page": "app/(auth)/auth/after-register/page.js",
+  "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js",
+  "/(protected)/favorites/page": "app/(protected)/favorites/page.js",
+  "/(protected)/alerts/page": "app/(protected)/alerts/page.js"
 }

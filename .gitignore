@@ -31,3 +31,4 @@ dist-ssr
 # Build artifacts
 server/main.exe
 *.exe
+.next

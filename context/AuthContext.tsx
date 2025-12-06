@@ -19,6 +19,7 @@ interface AuthContextType {
   status: AuthStatus;
   /** @deprecated Use status === 'authenticated' instead */
   isLoggedIn: boolean;
+  isAuthenticated: boolean;
   /** @deprecated Use status === 'checking' instead */
   isLoading: boolean;
   isMounted: boolean;
@@ -33,6 +34,7 @@ const defaultContextValue: AuthContextType = {
   user: null,
   status: "checking",
   isLoggedIn: false,
+  isAuthenticated: false,
   isLoading: true,
   isMounted: false,
   login: async () => { },
@@ -228,6 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         status,
         isLoggedIn,
+        isAuthenticated: isLoggedIn,
         isLoading,
         isMounted,
         login,

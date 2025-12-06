@@ -1,195 +1,128 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import HeroSection from "@/components/home/HeroSection";
-import { Filters } from "@/components/filters/Filters";
-import { ProductRow } from "@/components/products/ProductRow";
-import { ProductModal } from "@/components/products/ProductModal";
-import { mockProducts, filterProducts } from "@/lib/mockData";
-import type { FilterState, Product } from "@/types";
+import React, { useState, useEffect } from "react";
+import { SearchBar } from "@/components/search/SearchBar";
+import { ProductGrid } from "@/components/products/ProductGrid";
+import { mockProducts } from "@/lib/mockData";
+import { useAuth } from "@/context/AuthContext";
+import type { Product } from "@/types";
 
-function HomePageContent() {
-  const searchParams = useSearchParams();
-  const initialQuery = searchParams?.get("q") || "";
+export default function Home() {
+  const { isMounted } = useAuth();
 
-  const [hasSearched, setHasSearched] = useState(!!initialQuery);
-  const [isLoading, setIsLoading] = useState(false);
+  // State
+  const [query, setQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const [filters, setFilters] = useState<FilterState>({
-    query: initialQuery,
-    marketplaces: { amazon: true, ebay: true },
-    condition: "all",
-    category: "all",
-    sortBy: "rating_desc",
-  });
+  // Initial load of some "featured" products logic (optional, but nice for empty state)
+  // For now, per requirements: "If there is no query yet -> show a friendly empty state."
 
-  // Handle search
-  const handleSearch = (newQuery: string) => {
-    setFilters((prev) => ({ ...prev, query: newQuery }));
+  const handleSearch = (term: string) => {
+    setQuery(term);
+    if (!term.trim()) {
+      setProducts([]);
+      setHasSearched(false);
+      return;
+    }
+
+    setIsSearching(true);
     setHasSearched(true);
-    setIsLoading(true);
 
-    // Simulate API delay
+    // Simulate API search
     setTimeout(() => {
-      const results = filterProducts(mockProducts, newQuery, filters);
+      const lowerFreq = term.toLowerCase();
+      const results = mockProducts.filter(p =>
+        p.title.toLowerCase().includes(lowerFreq) ||
+        p.description?.toLowerCase().includes(lowerFreq) ||
+        p.category?.toLowerCase().includes(lowerFreq)
+      );
       setProducts(results);
-      setIsLoading(false);
-    }, 500);
+      setIsSearching(false);
+    }, 600);
   };
 
-  // Fetch products when filters change
-  useEffect(() => {
-    if (!hasSearched && !filters.query) return;
-
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        const results = filterProducts(mockProducts, filters.query, filters);
-        setProducts(results);
-      } catch (err) {
-        console.error("Failed to fetch products", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const timer = setTimeout(fetchProducts, 400);
-    return () => clearTimeout(timer);
-  }, [filters, hasSearched]);
-
-  // Initial load if query exists
-  useEffect(() => {
-    if (initialQuery) {
-      handleSearch(initialQuery);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Split products by marketplace
-  const amazonProducts = products.filter((p) => p.marketplace === "amazon");
-  const ebayProducts = products.filter((p) => p.marketplace === "ebay");
+  // Prevent hydration styling mismatch
+  if (!isMounted) return null;
 
   return (
-    <>
-      {/* Show Hero when no search has been performed */}
-      {!hasSearched && <HeroSection onSearch={handleSearch} />}
-
-      {/* Show Results */}
-      {hasSearched && (
-        <div className="relative">
-          {/* Background decoration */}
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent-purple/5 rounded-full blur-[150px]" />
-          <div className="absolute top-40 right-1/4 w-72 h-72 bg-accent-pink/5 rounded-full blur-[120px]" />
-
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col lg:flex-row gap-8">
-              {/* Sidebar Filters */}
-              <aside className="lg:w-72 flex-shrink-0">
-                <div className="sticky top-24">
-                  <Filters filters={filters} setFilters={setFilters} />
-                </div>
-              </aside>
-
-              {/* Main Content */}
-              <section className="flex-1 min-w-0">
-                {/* Search Status Bar */}
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex flex-wrap gap-2">
-                    {filters.query && (
-                      <span className="inline-flex items-center px-4 py-2 rounded-full text-sm glass-light text-gray-200">
-                        <svg
-                          className="w-4 h-4 mr-2 text-accent-purple"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                        &quot;{filters.query}&quot;
-                        <button
-                          onClick={() => {
-                            setFilters((prev) => ({ ...prev, query: "" }));
-                            setHasSearched(false);
-                          }}
-                          className="ml-2 hover:text-accent-pink transition-colors"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-sm text-gray-500">{products.length} results found</span>
-                </div>
-
-                {/* Loading State */}
-                {isLoading ? (
-                  <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                    <div className="w-12 h-12 border-4 border-accent-purple/30 border-t-accent-purple rounded-full animate-spin" />
-                    <p className="text-gray-400 font-medium">Searching marketplaces...</p>
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    {/* Amazon Products */}
-                    {filters.marketplaces.amazon && (
-                      <ProductRow
-                        title="Amazon Results"
-                        items={amazonProducts}
-                        colorClass="from-amazon to-amazon-dark"
-                        marketplace="amazon"
-                        onViewDetails={setSelectedProduct}
-                      />
-                    )}
-
-                    {/* eBay Products */}
-                    {filters.marketplaces.ebay && (
-                      <ProductRow
-                        title="eBay Results"
-                        items={ebayProducts}
-                        colorClass="from-ebay to-ebay-blue"
-                        marketplace="ebay"
-                        onViewDetails={setSelectedProduct}
-                      />
-                    )}
-                  </div>
-                )}
-              </section>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Product Modal */}
-      {selectedProduct && (
-        <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
-      )}
-    </>
-  );
-}
-
-// Loading fallback for Suspense
-function HomePageLoading() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-accent-purple/30 border-t-accent-purple rounded-full animate-spin" />
-        <p className="text-dark-400">Loading...</p>
+    <div className="min-h-screen bg-dark-900">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-purple/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-pink/5 rounded-full blur-[120px]" />
       </div>
-    </div>
-  );
-}
 
-export default function HomePage() {
-  return (
-    <Suspense fallback={<HomePageLoading />}>
-      <HomePageContent />
-    </Suspense>
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 flex flex-col items-center">
+
+        {/* Intro Section - Hide if searched to focus on results */}
+        {!hasSearched && (
+          <div className="text-center mb-12 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6">
+              Find the best deals across <br />
+              <span className="gradient-text">every marketplace</span>
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-400 mb-8">
+              Compare prices from Amazon, eBay, and more in one place.
+              Track history, set alerts, and save money.
+            </p>
+          </div>
+        )}
+
+        {/* Search Section */}
+        <div className={`w-full transition-all duration-500 ${hasSearched ? 'mb-8' : 'mb-12'}`}>
+          <SearchBar onSearch={handleSearch} />
+        </div>
+
+        {/* Results Section */}
+        <div className="w-full">
+          {isSearching ? (
+            <ProductGrid products={[]} isLoading={true} />
+          ) : hasSearched ? (
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">
+                  Results for &quot;<span className="text-accent-purple">{query}</span>&quot;
+                </h2>
+                <span className="text-sm text-gray-400">{products.length} items found</span>
+              </div>
+              <ProductGrid products={products} />
+            </div>
+          ) : (
+            // Empty State / Suggestions
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-gray-500 animate-in fade-in delay-200">
+              <div className="p-6 rounded-2xl bg-dark-800/50 border border-white/5">
+                <div className="w-12 h-12 bg-accent-purple/10 rounded-xl flex items-center justify-center mx-auto mb-4 text-accent-purple">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-medium mb-2">Search Once</h3>
+                <p className="text-sm">We search Amazon, eBay, and more simultaneously so you don't have to.</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-dark-800/50 border border-white/5">
+                <div className="w-12 h-12 bg-accent-pink/10 rounded-xl flex items-center justify-center mx-auto mb-4 text-accent-pink">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-medium mb-2">Track Prices</h3>
+                <p className="text-sm">Set alerts and get notified when prices drop below your target.</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-dark-800/50 border border-white/5">
+                <div className="w-12 h-12 bg-accent-lime/10 rounded-xl flex items-center justify-center mx-auto mb-4 text-accent-lime">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-medium mb-2">Save Favorites</h3>
+                <p className="text-sm">Keep track of items you want and compare them side by side.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }

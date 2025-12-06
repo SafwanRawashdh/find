@@ -1,137 +1,51 @@
 "use client";
 
-import { useState } from "react";
-import { Grid3X3, List, SlidersHorizontal } from "lucide-react";
-import type { Product } from "@/types";
+import React from "react";
 import { ProductCard } from "./ProductCard";
-import { EmptyState, Skeleton } from "@/components/ui";
-import { cn } from "@/lib/utils";
+import type { Product } from "@/types";
 
 interface ProductGridProps {
   products: Product[];
   isLoading?: boolean;
-  isFavorite?: (productId: string) => boolean;
-  onToggleFavorite?: (productId: string) => void;
-  onAddToCart?: (product: Product) => void;
-  onSetAlert?: (product: Product) => void;
-  className?: string;
 }
 
-type ViewMode = "grid" | "list";
-
-export function ProductGrid({
-  products,
-  isLoading = false,
-  isFavorite,
-  onToggleFavorite,
-  onAddToCart,
-  onSetAlert,
-  className,
-}: ProductGridProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
-
-  // Loading skeleton
+export function ProductGrid({ products, isLoading = false }: ProductGridProps) {
   if (isLoading) {
     return (
-      <div className={cn("space-y-6", className)}>
-        {/* Header skeleton */}
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-9 w-24" />
-        </div>
-        
-        {/* Grid skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl bg-dark-800/60 border border-dark-700/50 overflow-hidden"
-            >
-              <Skeleton className="aspect-square" />
-              <div className="p-4 space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-6 w-24" />
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="bg-dark-800 rounded-2xl p-4 border border-dark-600/50 animate-pulse h-[400px]">
+            <div className="bg-dark-700 h-48 rounded-xl mb-4 w-full" />
+            <div className="bg-dark-700 h-4 rounded w-3/4 mb-2" />
+            <div className="bg-dark-700 h-4 rounded w-1/2 mb-6" />
+            <div className="bg-dark-700 h-10 rounded-xl w-full mt-auto" />
+          </div>
+        ))}
       </div>
     );
   }
 
-  // Empty state
   if (products.length === 0) {
     return (
-      <EmptyState
-        icon={<SlidersHorizontal className="w-12 h-12" />}
-        title="No products found"
-        description="Try adjusting your search or filters to find what you're looking for."
-        className={className}
-      />
+      <div className="text-center py-20">
+        <div className="w-20 h-20 bg-dark-800 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-medium text-white mb-2">No products found</h3>
+        <p className="text-gray-400 max-w-sm mx-auto">
+          Try adjusting your search terms or filters to find what you&apos;re looking for.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className={cn("space-y-6", className)}>
-      {/* Header with count and view toggle */}
-      <div className="flex items-center justify-between">
-        <p className="text-dark-300">
-          <span className="font-semibold text-white">{products.length}</span>{" "}
-          {products.length === 1 ? "product" : "products"} found
-        </p>
-
-        {/* View Mode Toggle */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-dark-800/60 border border-dark-700/50">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={cn(
-              "p-2 rounded-md transition-colors",
-              viewMode === "grid"
-                ? "bg-accent-purple text-white"
-                : "text-dark-400 hover:text-white"
-            )}
-            aria-label="Grid view"
-          >
-            <Grid3X3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={cn(
-              "p-2 rounded-md transition-colors",
-              viewMode === "list"
-                ? "bg-accent-purple text-white"
-                : "text-dark-400 hover:text-white"
-            )}
-            aria-label="List view"
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Product Grid */}
-      <div
-        className={cn(
-          "grid gap-6",
-          viewMode === "grid"
-            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            : "grid-cols-1"
-        )}
-      >
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            isFavorite={isFavorite?.(product.id)}
-            onToggleFavorite={onToggleFavorite}
-            onAddToCart={onAddToCart}
-            onSetAlert={onSetAlert}
-            className={viewMode === "list" ? "flex-row" : ""}
-          />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-500">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 }
