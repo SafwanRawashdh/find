@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, PropsWithChildren } from 'react';
 import { IUser } from '../types';
-import { authService, favoritesService } from '../services/mockBackend';
+import { supabaseProductService } from '../services/supabaseService';
 
 interface AuthContextType {
   user: IUser | null;
@@ -20,8 +20,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const login = async (email: string, password?: string) => {
     setIsLoading(true);
     try {
-      const data = await authService.login(email);
-      setUser(data.user);
+      // Demo mode - create a local demo user
+      const demoUser: IUser = {
+        _id: 'demo-user-123',
+        email: email || 'demo@example.com',
+        displayName: 'Demo User',
+        defaultCountry: 'US',
+        defaultCurrency: 'USD',
+        favorites: [],
+      };
+      setUser(demoUser);
     } catch (error) {
       console.error("Login failed", error);
     } finally {
@@ -36,8 +44,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const toggleFavorite = async (productId: string) => {
     if (!user) return;
     try {
-      // Optimistic update could go here, but for simplicity we await
-      const updatedFavorites = await favoritesService.toggle(user._id, productId);
+      // Toggle favorite locally
+      const isFavorite = user.favorites.includes(productId);
+      const updatedFavorites = isFavorite
+        ? user.favorites.filter(id => id !== productId)
+        : [...user.favorites, productId];
       setUser({ ...user, favorites: updatedFavorites });
     } catch (error) {
       console.error("Failed to toggle favorite", error);

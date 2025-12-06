@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { IProduct } from '../types';
-import { productService } from '../services/mockBackend';
+import { supabaseProductService as productService } from '../services/supabaseService';
 import ProductCard from '../components/products/ProductCard';
 import ProductModal from '../components/products/ProductModal';
 

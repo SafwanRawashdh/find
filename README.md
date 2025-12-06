@@ -81,15 +81,28 @@ const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
 
 ```
 find/
-├── components/
-│   ├── filters/          # Search filters, presets
-│   ├── layout/           # Header, notifications
-│   └── products/         # Product cards, modals, charts
-├── context/              # React contexts (Auth, Cart)
-├── lib/                  # Supabase client
-├── pages/                # Route pages (Cart, Favorites, Profile)
-├── services/             # API services (mock & Supabase)
-├── server/               # Go backend (optional)
+├── src/                  # New modular architecture
+│   ├── components/
+│   │   ├── common/       # Reusable UI components (Button, Card, Modal, etc.)
+│   │   └── layout/       # Layout components (Header, NotificationBar)
+│   ├── features/
+│   │   ├── search/       # Search feature (HeroSection)
+│   │   ├── products/     # Product feature components
+│   │   ├── favorites/    # Favorites feature
+│   │   ├── cart/         # Cart feature
+│   │   └── profile/      # Profile feature
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # Supabase client, database types
+│   ├── providers/        # Context providers (Auth, Cart, Favorites)
+│   ├── services/         # API services (products, auth, favorites, priceHistory)
+│   ├── types/            # TypeScript type definitions
+│   ├── utils/            # Utility functions
+│   ├── App.tsx           # Main app component
+│   └── main.tsx          # Entry point
+├── components/           # Legacy components (being migrated)
+├── context/              # Legacy contexts (being migrated)
+├── pages/                # Page components
+├── services/             # Legacy services
 ├── supabase/
 │   └── migrations/       # Database schema & seed data
 ├── App.tsx               # Main application component
@@ -97,15 +110,25 @@ find/
 └── index.tsx             # Application entry point
 ```
 
+## 🏗️ Architecture
+
+The project follows a **feature-based architecture** with:
+
+- **Clean separation of concerns** - UI, business logic, and data access are separate
+- **Reusable components** - Common UI components in `src/components/common/`
+- **Custom hooks** - Encapsulated state logic (`useProducts`, `useFavorites`, etc.)
+- **Service layer** - Clean API abstraction over Supabase
+- **Type safety** - Comprehensive TypeScript types
+
 ## 🛠️ Tech Stack
 
 | Category | Technology |
 |----------|------------|
-| Frontend | React 19, TypeScript |
-| Build Tool | Vite |
+| Frontend | React 19.2, TypeScript 5.8 |
+| Build Tool | Vite 6.2 |
 | Database | Supabase (PostgreSQL) |
-| Styling | CSS (custom) |
-| Backend (optional) | Go |
+| Styling | Tailwind CSS (CDN) |
+| State Management | React Context + Custom Hooks |
 
 ## 📦 Available Scripts
 
