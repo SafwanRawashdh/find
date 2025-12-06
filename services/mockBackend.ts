@@ -1,229 +1,120 @@
-import { IProduct, Marketplace, IUser, IFilterState } from '../types';
+import { IProduct, IUser, IFilterState } from '../types';
 
-// --- MOCK DATA ---
-
-const MOCK_USER: IUser = {
-  _id: 'u123',
-  email: 'user@example.com',
-  displayName: 'Alex Rogers',
-  defaultCountry: 'US',
-  defaultCurrency: 'USD',
-  favorites: ['p1', 'p5'] // Initial mock favorites
-};
-
-const MOCK_PRODUCTS: IProduct[] = [
-  // Amazon Products
-  {
-    _id: 'p1',
-    marketplace: Marketplace.AMAZON,
-    title: 'Sony WH-1000XM5 Wireless Noise Cancelling Headphones',
-    imageUrl: 'https://picsum.photos/400/400?random=1',
-    price: 348.00,
-    currency: 'USD',
-    rating: 4.8,
-    ratingCount: 12500,
-    shippingEstimate: 'Tomorrow, 10 AM',
-    condition: 'new',
-    shipsTo: ['US', 'CA', 'UK'],
-    description: 'The best noise cancelling headphones on the market with 30-hour battery life.',
-    category: 'Electronics'
-  },
-  {
-    _id: 'p2',
-    marketplace: Marketplace.AMAZON,
-    title: 'Apple MacBook Air M2 Chip (13-inch, 8GB RAM)',
-    imageUrl: 'https://picsum.photos/400/400?random=2',
-    price: 999.00,
-    currency: 'USD',
-    rating: 4.9,
-    ratingCount: 5400,
-    shippingEstimate: '2 days',
-    condition: 'new',
-    shipsTo: ['US', 'UK'],
-    description: 'Redesigned around the next-generation M2 chip, MacBook Air is strikingly thin.',
-    category: 'Computers'
-  },
-  {
-    _id: 'p3',
-    marketplace: Marketplace.AMAZON,
-    title: 'Kindle Paperwhite (16 GB) - 6.8" display',
-    imageUrl: 'https://picsum.photos/400/400?random=3',
-    price: 139.99,
-    currency: 'USD',
-    rating: 4.7,
-    ratingCount: 22000,
-    shippingEstimate: 'Today',
-    condition: 'new',
-    shipsTo: ['US', 'CA', 'EU'],
-    description: 'Now with a 6.8” display and thinner borders, adjustable warm light, up to 10 weeks of battery life.',
-    category: 'Electronics'
-  },
-  {
-    _id: 'p4',
-    marketplace: Marketplace.AMAZON,
-    title: 'Logitech MX Master 3S - Performance Wireless Mouse',
-    imageUrl: 'https://picsum.photos/400/400?random=4',
-    price: 99.99,
-    currency: 'USD',
-    rating: 4.8,
-    ratingCount: 8900,
-    shippingEstimate: 'Tomorrow',
-    condition: 'new',
-    shipsTo: ['US'],
-    description: 'An icon remastered. Feel every moment of your workflow with even more precision.',
-    category: 'Computers'
-  },
-
-  // eBay Products
-  {
-    _id: 'p5',
-    marketplace: Marketplace.EBAY,
-    title: 'Sony WH-1000XM5 Black - Lightly Used',
-    imageUrl: 'https://picsum.photos/400/400?random=5',
-    price: 280.00,
-    currency: 'USD',
-    rating: 4.5,
-    ratingCount: 120,
-    shippingEstimate: '5-7 days',
-    condition: 'used',
-    shipsTo: ['US'],
-    description: 'Used for 2 weeks, practically new. Comes with original box.',
-    category: 'Electronics'
-  },
-  {
-    _id: 'p6',
-    marketplace: Marketplace.EBAY,
-    title: 'Vintage Film Camera 35mm',
-    imageUrl: 'https://picsum.photos/400/400?random=6',
-    price: 150.50,
-    currency: 'USD',
-    rating: 4.2,
-    ratingCount: 50,
-    shippingEstimate: '1 week',
-    condition: 'used',
-    shipsTo: ['US', 'UK', 'DE'],
-    description: 'Classic film camera in working condition. Lens cap included.',
-    category: 'Electronics'
-  },
-  {
-    _id: 'p7',
-    marketplace: Marketplace.EBAY,
-    title: 'Apple MacBook Air M2 - Open Box',
-    imageUrl: 'https://picsum.photos/400/400?random=7',
-    price: 850.00,
-    currency: 'USD',
-    rating: 4.9,
-    ratingCount: 10,
-    shippingEstimate: '3 days',
-    condition: 'new',
-    shipsTo: ['US'],
-    description: 'Open box return, zero cycles on battery.',
-    category: 'Computers'
-  },
-  {
-    _id: 'p8',
-    marketplace: Marketplace.EBAY,
-    title: 'Rare Collectible Action Figure',
-    imageUrl: 'https://picsum.photos/400/400?random=8',
-    price: 45.00,
-    currency: 'USD',
-    rating: 5.0,
-    ratingCount: 5,
-    shippingEstimate: '2 weeks',
-    condition: 'used',
-    shipsTo: ['US', 'JP'],
-    description: 'Mint condition in box. 1990s edition.',
-    category: 'Toys'
-  }
-];
-
-// --- SIMULATED SERVICES ---
+// Points to the Go server created in server/main.go
+const API_URL = 'http://localhost:8080/api';
 
 export const authService = {
   login: async (email: string): Promise<{ user: IUser; token: string }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          user: { ...MOCK_USER }, // Return a copy
-          token: 'fake-jwt-token-12345'
-        });
-      }, 800);
-    });
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Login failed with status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Auth Service Login Error:", error);
+      throw error;
+    }
   },
+
   logout: async (): Promise<void> => {
-    return new Promise(resolve => setTimeout(resolve, 200));
+    try {
+      await fetch(`${API_URL}/logout`, { method: 'POST' });
+    } catch (error) {
+      console.error("Auth Service Logout Error:", error);
+    }
   }
 };
 
 export const productService = {
   search: async (filters: IFilterState): Promise<IProduct[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let results = [...MOCK_PRODUCTS];
+    try {
+      const params = new URLSearchParams();
 
-        // Filter by Query
-        if (filters.query) {
-          const q = filters.query.toLowerCase();
-          results = results.filter(p => p.title.toLowerCase().includes(q));
-        }
+      // Basic Filters
+      if (filters.query) params.append('q', filters.query);
+      if (filters.minPrice !== '') params.append('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice !== '') params.append('maxPrice', filters.maxPrice.toString());
+      
+      // Sources: Convert object { AMAZON: true, EBAY: false } to comma-separated string "AMAZON"
+      const activeSources = Object.entries(filters.sources)
+        .filter(([_, isActive]) => isActive)
+        .map(([source]) => source)
+        .join(',');
+      
+      if (activeSources) params.append('sources', activeSources);
 
-        // Filter by Source
-        results = results.filter(p => filters.sources[p.marketplace]);
+      // Advanced Filters
+      if (filters.sortBy) params.append('sort', filters.sortBy);
+      if (filters.condition && filters.condition !== 'all') params.append('condition', filters.condition);
+      if (filters.category && filters.category !== 'all') params.append('category', filters.category);
+      if (filters.shippingCountry) params.append('country', filters.shippingCountry);
+      if (filters.currency) params.append('currency', filters.currency);
 
-        // Filter by Price
-        if (filters.minPrice !== '') {
-          results = results.filter(p => p.price >= (filters.minPrice as number));
-        }
-        if (filters.maxPrice !== '') {
-          results = results.filter(p => p.price <= (filters.maxPrice as number));
-        }
+      const response = await fetch(`${API_URL}/products?${params.toString()}`);
 
-        // Advanced Filter: Condition (Simulate backend filtering)
-        if (filters.condition !== 'all') {
-          results = results.filter(p => p.condition === filters.condition);
-        }
+      if (!response.ok) {
+        throw new Error(`Search failed with status: ${response.status}`);
+      }
 
-        // Advanced Filter: Category
-        if (filters.category && filters.category !== 'all') {
-          results = results.filter(p => p.category === filters.category);
-        }
-
-        // Sort
-        if (filters.sortBy === 'price_asc') {
-          results.sort((a, b) => a.price - b.price);
-        } else if (filters.sortBy === 'rating_desc') {
-          results.sort((a, b) => b.rating - a.rating);
-        }
-
-        resolve(results);
-      }, 600);
-    });
+      return await response.json();
+    } catch (error) {
+      console.error("Product Service Search Error:", error);
+      // Fallback to empty array to prevent UI crash
+      return [];
+    }
   },
   
   getProductsByIds: async (ids: string[]): Promise<IProduct[]> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const results = MOCK_PRODUCTS.filter(p => ids.includes(p._id));
-            resolve(results);
-        }, 400);
-    });
+    try {
+      const response = await fetch(`${API_URL}/products/batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Batch fetch failed with status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Product Service Batch Error:", error);
+      return [];
+    }
   }
 };
 
 export const favoritesService = {
   toggle: async (userId: string, productId: string): Promise<string[]> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Simulate updating the user record in DB
-    const index = MOCK_USER.favorites.indexOf(productId);
-    if (index > -1) {
-      MOCK_USER.favorites.splice(index, 1);
-    } else {
-      MOCK_USER.favorites.push(productId);
+    try {
+      const response = await fetch(`${API_URL}/favorites`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, productId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Favorite toggle failed with status: ${response.status}`);
+      }
+
+      // Returns the updated array of favorite IDs
+      return await response.json();
+    } catch (error) {
+      console.error("Favorites Service Toggle Error:", error);
+      throw error;
     }
-    
-    // Return fresh list
-    return [...MOCK_USER.favorites];
   }
 };

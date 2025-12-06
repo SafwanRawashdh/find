@@ -5,6 +5,11 @@ export enum Marketplace {
   EBAY = 'EBAY',
 }
 
+export interface IPricePoint {
+  date: string;
+  price: number;
+}
+
 export interface IUser {
   _id: string;
   email: string;
@@ -30,6 +35,7 @@ export interface IProduct {
   productUrl?: string; // External link
   description?: string;
   category: string;
+  priceHistory: IPricePoint[];
 }
 
 export interface IFilterState {

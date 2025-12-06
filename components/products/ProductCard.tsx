@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { IProduct, Marketplace } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import PriceAlertModal from './PriceAlertModal';
+import PriceHistoryChart from './PriceHistoryChart';
 
 interface ProductCardProps {
   product: IProduct;
@@ -13,8 +14,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   
   const isAmazon = product.marketplace === Marketplace.AMAZON;
-  // Check if product is in user's favorites list. If user is null, isFavorite is false.
-  const isFavorite = user?.favorites?.includes(product._id) || false;
+  // Explicitly check isLoggedIn and presence in favorites
+  const isFavorite = isLoggedIn && user?.favorites?.includes(product._id);
+
+  // Generate or slice history to last 7 days
+  const recentHistory = useMemo(() => {
+    let history = product.priceHistory || [];
+    
+    // Fallback mock data if history is empty
+    if (history.length < 2) {
+      history = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        // Random price +/- 10% of current price
+        const price = product.price * (0.9 + Math.random() * 0.2);
+        return {
+          date: d.toISOString().split('T')[0],
+          price: i === 6 ? product.price : price
+        };
+      });
+    }
+
+    // Return last 7 entries
+    return history.slice(-7);
+  }, [product]);
 
   const handleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the card click (view details)
@@ -46,6 +69,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
     ? `https://www.amazon.com/s?k=${encodeURIComponent(product.title)}` 
     : `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(product.title)}`);
 
+  const ebaySearchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(product.title)}`;
+
+  // Determine trend color: Green if price dropped (start > current), Red if price rose
+  const trendColor = recentHistory.length > 0 && recentHistory[0].price > product.price 
+    ? "#22c55e" 
+    : "#ef4444";
+
   return (
     <>
       <div 
@@ -63,7 +93,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
           />
           
           {/* Marketplace Badge */}
-          <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${isAmazon ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+          <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase z-10 ${isAmazon ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
             {isAmazon ? 'Amazon' : 'eBay'}
           </div>
         </div>
@@ -121,23 +151,38 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
           {/* Rating */}
           <div className="flex items-center gap-1 mb-2">
               <span className="text-yellow-400 text-xs">★</span>
-              <span className="text-xs font-medium text-gray-700">{product.rating}</span>
+              <span className="text-xs font-medium text-gray-700">{product.rating.toFixed(1)}</span>
               <span className="text-[10px] text-gray-400">({product.ratingCount})</span>
           </div>
 
-          {/* Price */}
+          {/* Price & History Trend */}
           <div className="mt-auto">
-              <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>
-                  <span className="text-xs text-gray-500">{product.currency}</span>
+              <div className="flex justify-between items-end">
+                <div>
+                  <div className="flex items-baseline gap-1">
+                      <span className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>
+                      <span className="text-xs text-gray-500">{product.currency}</span>
+                  </div>
+                  <p className="text-[10px] text-green-600 font-medium mt-1">
+                      Arrives: {product.shippingEstimate}
+                  </p>
+                </div>
+                {/* Mini Sparkline Chart */}
+                <div className="mb-1" title="7-Day Price Trend">
+                  <PriceHistoryChart 
+                    data={recentHistory} 
+                    width={60} 
+                    height={25} 
+                    color={trendColor} 
+                    className="opacity-70 hover:opacity-100"
+                  />
+                </div>
               </div>
-              <p className="text-[10px] text-green-600 font-medium mt-1">
-                  Arrives: {product.shippingEstimate}
-              </p>
           </div>
 
           {/* Actions */}
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex gap-2">
               <button 
                   onClick={() => onViewDetails(product)}
                   className="flex-1 py-1.5 px-3 bg-white border border-gray-200 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition-colors"
@@ -156,6 +201,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
               </a>
+            </div>
+
+            {/* Extra Buy on eBay button for Amazon products */}
+            {isAmazon && (
+              <a 
+                  href={ebaySearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-1.5 px-3 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-medium rounded hover:bg-blue-100 transition-colors text-center flex items-center justify-center gap-1"
+              >
+                  Buy on eBay
+                  <svg className="w-3 h-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+              </a>
+            )}
           </div>
         </div>
       </div>
