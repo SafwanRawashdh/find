@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Use environment variables or fallback to provided values
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://xxqbwckwcyhubyekyhxk.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4cWJ3Y2t3Y3lodWJ5ZWt5aHhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MjA1MjEsImV4cCI6MjA4MDQ5NjUyMX0._EjkyIGDfe9nO2eaPkl634R2F6L-iNhhPeIF0z_QW3U';
+// Next.js uses process.env for environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xxqbwckwcyhubyekyhxk.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4cWJ3Y2t3Y3lodWJ5ZWt5aHhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5MjA1MjEsImV4cCI6MjA4MDQ5NjUyMX0._EjkyIGDfe9nO2eaPkl634R2F6L-iNhhPeIF0z_QW3U';
 
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useState, ReactNode, PropsWithChildren, useEffect } from 'react';
 import { IProduct } from '../types';
 
@@ -17,26 +19,53 @@ interface CartContextType {
   getItemsByMarketplace: (marketplace: string) => CartItem[];
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+// Default context value for SSR safety
+const defaultContextValue: CartContextType = {
+  items: [],
+  addToCart: () => {},
+  removeFromCart: () => {},
+  updateQuantity: () => {},
+  clearCart: () => {},
+  getTotalItems: () => 0,
+  getTotalPrice: () => 0,
+  getItemsByMarketplace: () => [],
+};
+
+const CartContext = createContext<CartContextType>(defaultContextValue);
 
 export const CartProvider = ({ children }: PropsWithChildren) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    // Load from localStorage on init
-    const saved = localStorage.getItem('find_cart');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on client mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('find_cart');
+      if (saved) {
+        try {
+          setItems(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to parse cart from localStorage', e);
+        }
+      }
+      setIsLoaded(true);
+    }
+  }, []);
 
   // Save to localStorage whenever cart changes
   useEffect(() => {
-    localStorage.setItem('find_cart', JSON.stringify(items));
-  }, [items]);
+    if (isLoaded && typeof window !== 'undefined') {
+      localStorage.setItem('find_cart', JSON.stringify(items));
+    }
+  }, [items, isLoaded]);
 
   const addToCart = (product: IProduct, quantity: number = 1) => {
+    const productId = product.id || product._id || '';
     setItems(prev => {
-      const existing = prev.find(item => item.product._id === product._id);
+      const existing = prev.find(item => (item.product.id || item.product._id) === productId);
       if (existing) {
         return prev.map(item =>
-          item.product._id === product._id
+          (item.product.id || item.product._id) === productId
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
@@ -46,7 +75,7 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
   };
 
   const removeFromCart = (productId: string) => {
-    setItems(prev => prev.filter(item => item.product._id !== productId));
+    setItems(prev => prev.filter(item => (item.product.id || item.product._id) !== productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -56,7 +85,7 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
     }
     setItems(prev =>
       prev.map(item =>
-        item.product._id === productId
+        (item.product.id || item.product._id) === productId
           ? { ...item, quantity }
           : item
       )
@@ -99,7 +128,7 @@ export const CartProvider = ({ children }: PropsWithChildren) => {
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) throw new Error('useCart must be used within a CartProvider');
+  // Return context (with safe defaults if outside provider during SSR)
   return context;
 };
 

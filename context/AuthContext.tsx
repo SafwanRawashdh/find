@@ -1,33 +1,54 @@
-import React, { createContext, useContext, useState, ReactNode, PropsWithChildren } from 'react';
+"use client";
+
+import React, { createContext, useContext, useState, ReactNode, PropsWithChildren, useEffect } from 'react';
 import { IUser } from '../types';
-import { supabaseProductService } from '../services/supabaseService';
 
 interface AuthContextType {
   user: IUser | null;
   isLoggedIn: boolean;
   isLoading: boolean;
+  isMounted: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   toggleFavorite: (productId: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Default context value for SSR safety
+const defaultContextValue: AuthContextType = {
+  user: null,
+  isLoggedIn: false,
+  isLoading: false,
+  isMounted: false,
+  login: async () => {},
+  logout: () => {},
+  toggleFavorite: async () => {},
+};
+
+const AuthContext = createContext<AuthContextType>(defaultContextValue);
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Track when component is mounted (client-side)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const login = async (email: string, password?: string) => {
     setIsLoading(true);
     try {
       // Demo mode - create a local demo user
       const demoUser: IUser = {
+        id: 'demo-user-123',
         _id: 'demo-user-123',
         email: email || 'demo@example.com',
         displayName: 'Demo User',
         defaultCountry: 'US',
         defaultCurrency: 'USD',
         favorites: [],
+        createdAt: new Date().toISOString(),
       };
       setUser(demoUser);
     } catch (error) {
@@ -56,7 +77,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isLoading, login, logout, toggleFavorite }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isLoading, isMounted, login, logout, toggleFavorite }}>
       {children}
     </AuthContext.Provider>
   );
@@ -64,6 +85,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  // Return safe defaults instead of throwing - allows SSR to work
   return context;
 };

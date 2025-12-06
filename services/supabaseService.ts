@@ -4,6 +4,7 @@ import { IProduct, IUser, IFilterState, Marketplace, IPricePoint } from '../type
 // Convert Supabase product to app product format
 const mapSupabaseProduct = (row: any): IProduct => {
   return {
+    id: row.id,
     _id: row.id,
     marketplace: row.marketplace as Marketplace,
     title: row.title,
@@ -55,13 +56,16 @@ export const supabaseProductService = {
         query = query.or(`title.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%`);
       }
 
-      // Apply marketplace filter
-      const activeSources = Object.entries(filters.sources)
-        .filter(([_, isActive]) => isActive)
-        .map(([source]) => source);
-      
-      if (activeSources.length > 0) {
-        query = query.in('marketplace', activeSources);
+      // Apply marketplace filter (support both 'sources' and 'marketplaces')
+      const sources = filters.sources || filters.marketplaces;
+      if (sources) {
+        const activeSources = Object.entries(sources)
+          .filter(([_, isActive]) => isActive)
+          .map(([source]) => source.toLowerCase());
+        
+        if (activeSources.length > 0) {
+          query = query.in('marketplace', activeSources);
+        }
       }
 
       // Apply price range
