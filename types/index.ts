@@ -112,6 +112,23 @@ export interface BaseComponentProps {
 }
 
 // ============================================
+// Auth Types
+// ============================================
+
+export type AuthStatus = 'checking' | 'guest' | 'authenticated';
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+// ============================================
 // Legacy Type Aliases (for backward compatibility)
 // ============================================
 

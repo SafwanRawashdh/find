@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { FilterState } from "@/types";
 
@@ -13,11 +14,17 @@ const Marketplace = {
 interface FiltersProps {
   filters: FilterState;
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
+  /** Override auth state for testing - if not provided, uses AuthContext */
+  isAuthenticated?: boolean;
 }
 
-export function Filters({ filters, setFilters }: FiltersProps) {
-  const { isLoggedIn, login } = useAuth();
+export function Filters({ filters, setFilters, isAuthenticated }: FiltersProps) {
+  const router = useRouter();
+  const { status } = useAuth();
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+
+  // Use prop if provided, otherwise use context
+  const isLoggedIn = isAuthenticated !== undefined ? isAuthenticated : status === "authenticated";
 
   const handleInputChange = (field: keyof FilterState, value: unknown) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
@@ -34,6 +41,10 @@ export function Filters({ filters, setFilters }: FiltersProps) {
     console.log(`Saving preset "${name}"`, filters);
     alert(`Preset "${name}" saved successfully!`);
     setIsSaveModalOpen(false);
+  };
+
+  const handleUnlockClick = () => {
+    router.push("/auth/login");
   };
 
   // --- COMPONENT: LOCKED OVERLAY ---
@@ -53,7 +64,7 @@ export function Filters({ filters, setFilters }: FiltersProps) {
         <p className="text-sm font-semibold text-white mb-1">{label}</p>
         <p className="text-xs text-gray-500 mb-3">Sign in to unlock</p>
         <button
-          onClick={() => login("guest@example.com", "pass")}
+          onClick={handleUnlockClick}
           className="text-sm bg-gradient-to-r from-accent-purple to-accent-pink text-white px-4 py-2 rounded-lg hover:opacity-90 transition-all w-full font-medium"
         >
           Unlock Now
