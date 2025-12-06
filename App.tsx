@@ -10,7 +10,7 @@ import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { IProduct, IFilterState, Marketplace } from './types';
-import { productService } from './services/mockBackend';
+import { supabaseProductService as productService } from './services/supabaseService';
 
 // Utility for debouncing function calls
 function debounce<T extends (...args: any[]) => void>(func: T, wait: number) {
